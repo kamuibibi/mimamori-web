@@ -12,12 +12,12 @@
       padding: 40px;
     }
     button {
-      font-size: 20px;
-      padding: 16px 24px;
+      font-size: 22px;
+      padding: 18px 26px;
       background-color: #4CAF50;
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -26,8 +26,17 @@
   <h1>みまもりWeb</h1>
   <p>異変を感じたら下のボタンを押してください</p>
 
-  <button onclick="alert('ボタンが押されました')">
+  <button onclick="sendLine()">
     家族に知らせる
   </button>
+
+  <script>
+    function sendLine() {
+      const message = encodeURIComponent(
+        "【みまもり通知】\n今、少し不安なことがありました。確認をお願いします。"
+      );
+      location.href = "https://line.me/R/msg/text/?" + message;
+    }
+  </script>
 </body>
 </html>
