@@ -1,17 +1,33 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>みまもりアラーム</title>
+  <title>みまもり</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body>
-  <h1>みまもりアラーム</h1>
-  <p>異常があったら通知します。</p>
 
-  <button onclick="alert('通知テスト')">
-    通知テスト
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    button {
+      font-size: 20px;
+      padding: 16px 24px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>みまもりWeb</h1>
+  <p>異変を感じたら下のボタンを押してください</p>
+
+  <button onclick="alert('ボタンが押されました')">
+    家族に知らせる
   </button>
 </body>
 </html>
