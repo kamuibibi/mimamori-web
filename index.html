@@ -19,23 +19,38 @@
       border: none;
       border-radius: 10px;
     }
+    #status {
+      margin-top: 30px;
+      font-size: 18px;
+      color: #333;
+    }
   </style>
 </head>
 
 <body>
-  <h1>みまもりWeb</h1>
-  <p>異変を感じたら下のボタンを押してください</p>
+  <h1>みまもり</h1>
+  <p>不安なことがあったら、下のボタンを押してください</p>
 
   <button onclick="sendLine()">
     家族に知らせる
   </button>
 
+  <div id="status"></div>
+
   <script>
     function sendLine() {
-      const message = encodeURIComponent(
-        "【みまもり通知】\n今、少し不安なことがありました。確認をお願いします。"
-      );
-      location.href = "https://line.me/R/msg/text/?" + message;
+      // 送信中表示
+      document.getElementById("status").textContent =
+        "LINEの送信画面を開きました。送信ボタンを押してください。";
+
+      const message =
+        "【みまもり通知】今、少し不安なことがありました。確認をお願いします。";
+
+      const url =
+        "https://line.me/R/msg/text/?" + encodeURIComponent(message);
+
+      // LINEへ遷移
+      location.href = url;
     }
   </script>
 </body>
