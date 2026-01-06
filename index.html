@@ -1,57 +1,171 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>みまもり</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 40px;
-    }
-    button {
-      font-size: 22px;
-      padding: 18px 26px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 10px;
-    }
-    #status {
-      margin-top: 30px;
-      font-size: 18px;
-      color: #333;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>みまもりWeb</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            margin-bottom: 15px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            color: #666;
+        }
+        
+        .emoji {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
-
 <body>
-  <h1>みまもり</h1>
-  <p>不安なことがあったら、下のボタンを押してください</p>
+    <div class="container">
+        <div class="emoji">🔔</div>
+        <h1>みまもりWeb</h1>
+        <p class="subtitle">不安なことがあったら、<br>下のボタンを押してください</p>
+        
+        <button onclick="sendLine()">📱 家族に知らせる</button>
+        
+        <div id="status"></div>
+    </div>
 
-  <button onclick="sendLine()">
-    家族に知らせる
-  </button>
+    <script>
+        // 設定情報（ここを編集してください）
+        const CONFIG = {
+            WORKER_URL: 'https://yellow-bird-8e16.kamuibibi4144.workers.dev/notify',
+            ADMIN_KEY: 'YOUR_ADMIN_KEY_HERE',  // ← Cloudflare Workerで設定したADMIN_KEYを入力
+            MESSAGE: '【みまもり通知】\n今、少し不安なことがありました。確認をお願いします。🏠'
+        };
 
-  <div id="status"></div>
+        async function sendLine() {
+            const button = event.target;
+            const statusElement = document.getElementById('status');
+            
+            // ボタンを無効化
+            button.disabled = true;
+            
+            // 送信中表示
+            statusElement.className = 'loading';
+            statusElement.textContent = '送信中...';
+            
+            try {
+                const response = await fetch(CONFIG.WORKER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Key': CONFIG.ADMIN_KEY,
+                    },
+                    body: JSON.stringify({ message: CONFIG.MESSAGE })
+                });
 
-  <script>
-    function sendLine() {
-      // 送信中表示
-      document.getElementById("status").textContent =
-        "LINEの送信画面を開きました。送信ボタンを押してください。";
-
-      const message =
-        "【みまもり通知】今、少し不安なことがありました。確認をお願いします。";
-
-      const url =
-        "https://line.me/R/msg/text/?" + encodeURIComponent(message);
-
-      // LINEへ遷移
-      location.href = url;
-    }
-  </script>
+                const result = await response.json();
+                
+                if (response.ok) {
+                    statusElement.className = 'success';
+                    statusElement.textContent = '✅ 家族に通知を送信しました！';
+                } else {
+                    statusElement.className = 'error';
+                    statusElement.textContent = '❌ エラー: ' + (result.error || '送信に失敗しました');
+                }
+            } catch (error) {
+                statusElement.className = 'error';
+                statusElement.textContent = '❌ エラー: 接続に失敗しました';
+                console.error('Error:', error);
+            } finally {
+                // 3秒後にボタンを再度有効化
+                setTimeout(() => {
+                    button.disabled = false;
+                }, 3000);
+            }
+        }
+    </script>
 </body>
 </html>
