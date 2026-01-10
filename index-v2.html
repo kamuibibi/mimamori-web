@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏠 みまもりアプリ v2.2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        body.custom-bg {
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+            font-size: 24px;
+            cursor: pointer;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .settings-btn:hover {
+            background: #667eea;
+            transform: scale(1.1);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            width: 100%;
+            max-width: 400px;
+            margin: 10px auto;
+            display: block;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #responseMessage {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .modal h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        /* 設定メニュー */
+        .settings-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .settings-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+            border: 2px solid transparent;
+        }
+
+        .settings-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .settings-item-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .settings-item-desc {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 履歴アイテム */
+        .history-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: left;
+            border-left: 4px solid #667eea;
+        }
+
+        .history-date {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .history-message {
+            font-size: 16px;
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+
+        .history-stats {
+            font-size: 14px;
+            color: #28a745;
+        }
+
+        /* 背景設定 */
+        .bg-presets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .bg-preset {
+            height: 80px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .bg-preset:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .bg-preset-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .bg-preset-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .bg-preset-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .bg-preset-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .bg-preset-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .bg-preset-6 { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+
+        .bg-option {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .bg-option label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .bg-option input[type="text"],
+        .bg-option input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .bg-option button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        /* 家族管理 */
+        .family-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .family-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+            border-left: 4px solid #667eea;
+        }
+
+        .family-nickname {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .family-userid {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+
+        .family-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .family-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .family-actions button {
+            padding: 8px 15px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-toggle {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .family-item.inactive {
+            opacity: 0.5;
+            border-left-color: #ccc;
+        }
+
+        /* ステータス表示 */
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            animation: slideInRight 0.3s;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .status.error {
+            background: #dc3545;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            button {
+                font-size: 20px;
+                padding: 15px 30px;
+            }
+
+            .bg-presets {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="settings-btn" onclick="showSettings()">⚙️</button>
+        <h1>🏠 みまもりアプリ</h1>
+        <button id="notifyButton" onclick="sendNotification()">📱 家族に知らせる</button>
+        <div id="responseMessage"></div>
+    </div>
+
+    <!-- 設定モーダル -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSettings()">&times;</span>
+            <h2>⚙️ 設定</h2>
+            <div class="settings-menu">
+                <div class="settings-item" onclick="showFamilyManagement()">
+                    <div class="settings-item-title">👥 家族の管理</div>
+                    <div class="settings-item-desc">登録されている家族の確認・編集</div>
+                </div>
+                <div class="settings-item" onclick="showHistory()">
+                    <div class="settings-item-title">📜 通知履歴を見る</div>
+                    <div class="settings-item-desc">過去の通知記録を確認</div>
+                </div>
+                <div class="settings-item" onclick="showBackgroundSettings()">
+                    <div class="settings-item-title">🖼️ 背景を変更</div>
+                    <div class="settings-item-desc">アプリの背景をカスタマイズ</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 履歴モーダル -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeHistory()">&times;</span>
+            <h2>📜 通知履歴</h2>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <!-- 背景設定モーダル -->
+    <div id="backgroundModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeBackgroundSettings()">&times;</span>
+            <h2>🖼️ 背景を変更</h2>
+            
+            <div class="bg-option">
+                <label>📱 画像をアップロード：</label>
+                <input type="file" id="bgFileInput" accept="image/*" onchange="handleFileSelect(event)">
+            </div>
+
+            <div class="bg-option">
+                <label>🔗 画像URLを入力：</label>
+                <input type="text" id="bgUrlInput" placeholder="https://example.com/image.jpg">
+                <button onclick="applyCustomBackground()">適用</button>
+            </div>
+
+            <div class="bg-option">
+                <label>🎨 プリセット背景：</label>
+                <div class="bg-presets">
+                    <div class="bg-preset bg-preset-1" onclick="applyPresetBackground(1)"></div>
+                    <div class="bg-preset bg-preset-2" onclick="applyPresetBackground(2)"></div>
+                    <div class="bg-preset bg-preset-3" onclick="applyPresetBackground(3)"></div>
+                    <div class="bg-preset bg-preset-4" onclick="applyPresetBackground(4)"></div>
+                    <div class="bg-preset bg-preset-5" onclick="applyPresetBackground(5)"></div>
+                    <div class="bg-preset bg-preset-6" onclick="applyPresetBackground(6)"></div>
+                </div>
+            </div>
+
+            <button onclick="resetBackground()">🔄 背景をリセット</button>
+        </div>
+    </div>
+
+    <!-- 家族管理モーダル -->
+    <div id="familyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeFamilyManagement()">&times;</span>
+            <h2>👥 家族の管理</h2>
+            <div id="familyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            WORKER_URL: 'https://yellow-bird-8e16.kamuibibi4144.workers.dev',
+            CUSTOMER_KEY: 'demo-key-12345678',
+            MESSAGE: '【みまもり通知】\n今、少し不安なことがありました。確認をお願いします。🏠'
+        };
+
+        // 通知送信
+        async function sendNotification() {
+            const responseElement = document.getElementById('responseMessage');
+            responseElement.innerHTML = '送信中...';
+            responseElement.className = '';
+
+            try {
+                const response = await fetch(`${CONFIG.WORKER_URL}/notify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Customer-Key': CONFIG.CUSTOMER_KEY
+                    },
+                    body: JSON.stringify({ message: CONFIG.MESSAGE })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    responseElement.innerHTML = `✅ 通知を送信しました！<br>成功: ${result.successCount}人 / 失敗: ${result.failedCount}人`;
+                    responseElement.className = 'success';
+                } else {
+                    responseElement.innerHTML = `❌ エラー: ${result.error}`;
+                    responseElement.className = 'error';
+                }
+            } catch (error) {
+                responseElement.innerHTML = `❌ 送信に失敗しました: ${error.message}`;
+                responseElement.className = 'error';
+            }
+        }
+
+        // 設定メニュー
+        function showSettings() {
+            document.getElementById('settingsModal').style.display = 'block';
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        // 履歴表示
+        async function showHistory() {
+            closeSettings();
+            document.getElementById('historyModal').style.display = 'block';
+            
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '読み込み中...';
+
+            try {
+                const response = await fetch(`${CONFIG.WORKER_URL}/history`, {
+                    headers: {
+                        'X-Customer-Key': CONFIG.CUSTOMER_KEY
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.history && data.history.length > 0) {
+                    historyList.innerHTML = data.history.map(item => `
+                        <div class="history-item">
+                            <div class="history-date">📅 ${new Date(item.sent_at).toLocaleString('ja-JP')}</div>
+                            <div class="history-message">${item.message}</div>
+                            <div class="history-stats">
+                                送信先: ${item.target_count}人 | 
+                                ✅ 成功: ${item.success_count} | 
+                                ❌ 失敗: ${item.failed_count}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    historyList.innerHTML = '<p>通知履歴がありません。</p>';
+                }
+            } catch (error) {
+                historyList.innerHTML = `<p class="error">❌ 履歴の取得に失敗しました: ${error.message}</p>`;
+            }
+        }
+
+        function closeHistory() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        // 背景設定
+        function showBackgroundSettings() {
+            closeSettings();
+            document.getElementById('backgroundModal').style.display = 'block';
+        }
+
+        function closeBackgroundSettings() {
+            document.getElementById('backgroundModal').style.display = 'none';
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageUrl = e.target.result;
+                    document.body.style.background = 'none';
+                    document.body.style.backgroundImage = `url('${imageUrl}')`;
+                    document.body.classList.add('custom-bg');
+                    localStorage.setItem('customBackground', imageUrl);
+                    showStatus('✅ 背景を変更しました');
+                    closeBackgroundSettings();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showStatus('❌ 画像ファイルを選択してください', true);
+            }
+        }
+
+        function applyCustomBackground() {
+            const url = document.getElementById('bgUrlInput').value;
+            if (url) {
+                document.body.style.background = 'none';
+                document.body.style.backgroundImage = `url('${url}')`;
+                document.body.classList.add('custom-bg');
+                localStorage.setItem('customBackground', url);
+                showStatus('✅ 背景を変更しました');
+                closeBackgroundSettings();
+            } else {
+                showStatus('❌ URLを入力してください', true);
+            }
+        }
+
+        function applyPresetBackground(preset) {
+            const presets = {
+                1: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                2: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                3: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                4: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                5: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                6: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+            };
+            
+            document.body.style.backgroundImage = 'none';
+            document.body.style.background = presets[preset];
+            document.body.classList.remove('custom-bg');
+            localStorage.removeItem('customBackground');
+            showStatus('✅ 背景を変更しました');
+            closeBackgroundSettings();
+        }
+
+        function resetBackground() {
+            document.body.style.backgroundImage = 'none';
+            document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            document.body.classList.remove('custom-bg');
+            localStorage.removeItem('customBackground');
+            showStatus('✅ 背景をリセットしました');
+            closeBackgroundSettings();
+        }
+
+        // 家族管理（自動化対応）
+        async function showFamilyManagement() {
+            closeSettings();
+            document.getElementById('familyModal').style.display = 'block';
+            
+            const familyList = document.getElementById('familyList');
+            familyList.innerHTML = '読み込み中...';
+
+            try {
+                const response = await fetch(`${CONFIG.WORKER_URL}/customer-info`, {
+                    headers: {
+                        'X-Customer-Key': CONFIG.CUSTOMER_KEY
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.targets && data.targets.length > 0) {
+                    familyList.innerHTML = data.targets.map(target => `
+                        <div class="family-item ${target.is_active ? '' : 'inactive'}">
+                            <div class="family-nickname">👤 ${target.nickname}</div>
+                            <div class="family-userid">UserID: ${target.user_id}</div>
+                            <div class="family-date">登録日: ${new Date(target.created_at).toLocaleDateString('ja-JP')}</div>
+                            <div class="family-actions">
+                                <button class="btn-edit" onclick="editNickname(${target.id}, '${escapeHtml(target.nickname)}')">✏️ 編集</button>
+                                <button class="btn-toggle" onclick="toggleActive(${target.id}, ${target.is_active ? 0 : 1})">
+                                    ${target.is_active ? '🔕 無効化' : '🔔 有効化'}
+                                </button>
+                                <button class="btn-delete" onclick="deleteFamily(${target.id}, '${escapeHtml(target.nickname)}')">🗑️ 削除</button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    familyList.innerHTML = '<p>登録されている家族がいません。</p>';
+                }
+            } catch (error) {
+                familyList.innerHTML = `<p class="error">❌ 家族情報の取得に失敗しました: ${error.message}</p>`;
+            }
+        }
+
+        function closeFamilyManagement() {
+            document.getElementById('familyModal').style.display = 'none';
+        }
+
+        // ニックネーム編集（自動化）
+        async function editNickname(id, currentNickname) {
+            const newNickname = prompt(`新しいニックネームを入力してください:`, currentNickname);
+            if (newNickname && newNickname !== currentNickname) {
+                try {
+                    const response = await fetch(`${CONFIG.WORKER_URL}/update-nickname`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Customer-Key': CONFIG.CUSTOMER_KEY
+                        },
+                        body: JSON.stringify({ id, nickname: newNickname })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        showStatus('✅ ニックネームを更新しました');
+                        showFamilyManagement(); // リロード
+                    } else {
+                        showStatus(`❌ エラー: ${result.error}`, true);
+                    }
+                } catch (error) {
+                    showStatus(`❌ 更新に失敗しました: ${error.message}`, true);
+                }
+            }
+        }
+
+        // 有効化/無効化（自動化）
+        async function toggleActive(id, newStatus) {
+            try {
+                const response = await fetch(`${CONFIG.WORKER_URL}/toggle-active`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Customer-Key': CONFIG.CUSTOMER_KEY
+                    },
+                    body: JSON.stringify({ id, is_active: newStatus })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    const status = newStatus ? '有効化' : '無効化';
+                    showStatus(`✅ 通知を${status}しました`);
+                    showFamilyManagement(); // リロード
+                } else {
+                    showStatus(`❌ エラー: ${result.error}`, true);
+                }
+            } catch (error) {
+                showStatus(`❌ 更新に失敗しました: ${error.message}`, true);
+            }
+        }
+
+        // 家族削除（自動化）
+        async function deleteFamily(id, nickname) {
+            if (confirm(`本当に「${nickname}」を削除しますか？`)) {
+                try {
+                    const response = await fetch(`${CONFIG.WORKER_URL}/delete-target`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Customer-Key': CONFIG.CUSTOMER_KEY
+                        },
+                        body: JSON.stringify({ id })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        showStatus('✅ 家族を削除しました');
+                        showFamilyManagement(); // リロード
+                    } else {
+                        showStatus(`❌ エラー: ${result.error}`, true);
+                    }
+                } catch (error) {
+                    showStatus(`❌ 削除に失敗しました: ${error.message}`, true);
+                }
+            }
+        }
+
+        // HTMLエスケープ
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // ステータス表示
+        function showStatus(message, isError = false) {
+            const status = document.createElement('div');
+            status.className = `status ${isError ? 'error' : ''}`;
+            status.textContent = message;
+            document.body.appendChild(status);
+
+            setTimeout(() => {
+                status.remove();
+            }, 3000);
+        }
+
+        // モーダルの外側クリックで閉じる
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // 背景の復元
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedBackground = localStorage.getItem('customBackground');
+            if (savedBackground) {
+                document.body.style.background = 'none';
+                document.body.style.backgroundImage = `url('${savedBackground}')`;
+                document.body.classList.add('custom-bg');
+            }
+        });
+    </script>
+</body>
+</html>
