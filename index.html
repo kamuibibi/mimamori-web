@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏠 みまもりアプリ v2.2</title>
+    <title>🏠 みまもりアプリ v2.3</title>
     <style>
         * {
             margin: 0;
@@ -350,6 +350,44 @@
             border-left-color: #ccc;
         }
 
+        /* 招待画面 */
+        .invite-container {
+            text-align: center;
+        }
+
+        .qr-code {
+            max-width: 300px;
+            width: 100%;
+            margin: 20px auto;
+            display: block;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 10px;
+            background: white;
+        }
+
+        .invite-instructions {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .invite-instructions h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .invite-instructions ol {
+            margin-left: 20px;
+        }
+
+        .invite-instructions li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
         /* ステータス表示 */
         .status {
             position: fixed;
@@ -396,6 +434,10 @@
             .bg-presets {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .qr-code {
+                max-width: 250px;
+            }
         }
     </style>
 </head>
@@ -417,6 +459,10 @@
                     <div class="settings-item-title">👥 家族の管理</div>
                     <div class="settings-item-desc">登録されている家族の確認・編集</div>
                 </div>
+                <div class="settings-item" onclick="showInvite()">
+                    <div class="settings-item-title">➕ 家族を招待</div>
+                    <div class="settings-item-desc">QRコードで家族を追加</div>
+                </div>
                 <div class="settings-item" onclick="showHistory()">
                     <div class="settings-item-title">📜 通知履歴を見る</div>
                     <div class="settings-item-desc">過去の通知記録を確認</div>
@@ -424,6 +470,29 @@
                 <div class="settings-item" onclick="showBackgroundSettings()">
                     <div class="settings-item-title">🖼️ 背景を変更</div>
                     <div class="settings-item-desc">アプリの背景をカスタマイズ</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 招待モーダル -->
+    <div id="inviteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeInvite()">&times;</span>
+            <h2>➕ 家族を招待</h2>
+            <div class="invite-container">
+                <p>家族にこのQRコードを読み取ってもらい、LINE公式アカウントを友だち追加してください。</p>
+                <img src="download.png" alt="LINE QRコード" class="qr-code">
+                <div class="invite-instructions">
+                    <h3>📱 招待手順</h3>
+                    <ol>
+                        <li>家族のスマホでLINEアプリを開く</li>
+                        <li>「ホーム」タブの右上にある「友だち追加」をタップ</li>
+                        <li>「QRコード」をタップ</li>
+                        <li>上記のQRコードを読み取る</li>
+                        <li>「追加」ボタンをタップ</li>
+                        <li>自動的に登録され、歓迎メッセージが届きます！</li>
+                    </ol>
                 </div>
             </div>
         </div>
@@ -525,6 +594,16 @@
 
         function closeSettings() {
             document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        // 招待画面
+        function showInvite() {
+            closeSettings();
+            document.getElementById('inviteModal').style.display = 'block';
+        }
+
+        function closeInvite() {
+            document.getElementById('inviteModal').style.display = 'none';
         }
 
         // 履歴表示
