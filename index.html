@@ -5,24 +5,172 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🏠 みまもりアプリ</title>
   <style>
-    body{font-family:system-ui, sans-serif; margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#667eea 0%, #764ba2 100%); padding:20px;}
-    .box{background:rgba(255,255,255,0.95); width:100%; max-width:520px; border-radius:18px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,0.15);}
+    body{
+      font-family:system-ui, sans-serif;
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,#667eea 0%, #764ba2 100%);
+      padding:20px;
+      transition: background 0.3s ease;
+    }
+    body.custom-bg{
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
+    }
+
+    .box{
+      background:rgba(255,255,255,0.95);
+      width:100%;
+      max-width:520px;
+      border-radius:18px;
+      padding:24px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.15);
+      position:relative;
+    }
+
+    /* 右上の設定ボタン（背景変更） */
+    .settings-btn{
+      position:absolute;
+      top:14px;
+      right:14px;
+      width:44px;
+      height:44px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      background: rgba(102,126,234,0.12);
+      color:#334;
+      font-size:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition: transform 0.15s ease;
+    }
+    .settings-btn:hover{ transform: scale(1.05); }
+
     h1{margin:0 0 12px; color:#4b5bdc; font-size:26px;}
-    .meta{font-size:14px; color:#555; line-height:1.6; margin-bottom:14px;}
+    .meta{font-size:14px; color:#555; line-height:1.6; margin-bottom:14px; white-space:pre-line;}
     .row{display:flex; gap:10px; flex-wrap:wrap; margin:10px 0;}
     input{flex:1; min-width:220px; padding:12px; font-size:16px; border:2px solid #ddd; border-radius:10px;}
-    button{width:100%; padding:16px; font-size:20px; border:none; border-radius:999px; color:#fff; cursor:pointer; background:linear-gradient(135deg,#667eea 0%, #764ba2 100%); box-shadow:0 6px 18px rgba(102,126,234,0.35);}
+    button{
+      width:100%;
+      padding:16px;
+      font-size:20px;
+      border:none;
+      border-radius:999px;
+      color:#fff;
+      cursor:pointer;
+      background:linear-gradient(135deg,#667eea 0%, #764ba2 100%);
+      box-shadow:0 6px 18px rgba(102,126,234,0.35);
+    }
     button:disabled{opacity:0.5; cursor:not-allowed; box-shadow:none;}
     .smallBtn{width:auto; padding:10px 14px; font-size:14px; border-radius:12px;}
-    #msg{margin-top:12px; padding:12px; border-radius:12px; font-size:16px; line-height:1.6;}
+    #msg{margin-top:12px; padding:12px; border-radius:12px; font-size:16px; line-height:1.6; white-space:pre-line;}
     .ok{background:#d4edda; color:#155724; border:1px solid #c3e6cb;}
     .ng{background:#f8d7da; color:#721c24; border:1px solid #f5c6cb;}
     .note{font-size:12px; color:#666; margin-top:10px; line-height:1.6;}
     .hr{height:1px; background:#eee; margin:14px 0;}
+
+    /* ===== 背景設定モーダル ===== */
+    .modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,0.45);
+      z-index:9999;
+    }
+    .modal-content{
+      position:relative;
+      max-width:560px;
+      width:92%;
+      margin: 8vh auto;
+      background:#fff;
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.25);
+    }
+    .modal-close{
+      position:absolute;
+      top:10px;
+      right:10px;
+      width:36px;
+      height:36px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      background:#f1f1f1;
+      color:#333;
+      font-size:18px;
+    }
+    .modal h2{ margin:0 0 14px; color:#4b5bdc; }
+    .bg-row{ margin:14px 0; }
+    .bg-row label{ display:block; margin-bottom:8px; font-weight:700; color:#333; }
+    .bg-row input[type="text"], .bg-row input[type="file"]{
+      width:100%;
+      padding:10px;
+      border:1px solid #ddd;
+      border-radius:10px;
+      font-size:14px;
+      box-sizing:border-box;
+    }
+    .subbtn{
+      margin-top:10px;
+      width:100%;
+      padding:10px;
+      border:none;
+      border-radius:10px;
+      cursor:pointer;
+      color:#fff;
+      background:linear-gradient(135deg,#667eea 0%, #764ba2 100%);
+      box-shadow:0 4px 12px rgba(102,126,234,0.25);
+      font-size:14px;
+    }
+    .preset-grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    .preset{
+      height:64px;
+      border-radius:12px;
+      border:none;
+      cursor:pointer;
+      box-shadow:0 4px 10px rgba(0,0,0,0.08);
+    }
+    .p1{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .p2{ background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .p3{ background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .p4{ background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .p5{ background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .p6{ background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+
+    .danger{
+      margin-top:12px;
+      width:100%;
+      padding:10px;
+      border:none;
+      border-radius:10px;
+      cursor:pointer;
+      color:#fff;
+      background:linear-gradient(135deg,#f093fb 0%, #f5576c 100%);
+      box-shadow:0 4px 12px rgba(240,147,251,0.2);
+      font-size:14px;
+    }
+
+    @media (max-width: 520px){
+      .preset-grid{ grid-template-columns: repeat(2, 1fr); }
+    }
   </style>
 </head>
 <body>
   <div class="box">
+    <!-- 停止中でも背景変更はできるようにする -->
+    <button class="settings-btn" type="button" onclick="openBgModal()">⚙️</button>
+
     <h1>🏠 みまもりアプリ</h1>
 
     <div class="meta" id="info">
@@ -43,6 +191,39 @@
     <div class="note">
       連打防止：送信後しばらく押せません。<br/>
       送信できたら短く振動します（端末によって振動しない場合があります）。
+    </div>
+  </div>
+
+  <!-- 背景設定モーダル（停止中でも使える） -->
+  <div id="bgModal" class="modal" onclick="if(event.target.id==='bgModal') closeBgModal()">
+    <div class="modal-content">
+      <button class="modal-close" type="button" onclick="closeBgModal()">×</button>
+      <h2>🖼️ 背景を変更</h2>
+
+      <div class="bg-row">
+        <label>画像をアップロード</label>
+        <input type="file" id="bgFile" accept="image/*" />
+      </div>
+
+      <div class="bg-row">
+        <label>画像URL</label>
+        <input type="text" id="bgUrl" placeholder="https://example.com/bg.jpg" />
+        <button type="button" class="subbtn" onclick="applyBgUrl()">適用</button>
+      </div>
+
+      <div class="bg-row">
+        <label>プリセット</label>
+        <div class="preset-grid">
+          <button type="button" class="preset p1" onclick="applyPreset(1)"></button>
+          <button type="button" class="preset p2" onclick="applyPreset(2)"></button>
+          <button type="button" class="preset p3" onclick="applyPreset(3)"></button>
+          <button type="button" class="preset p4" onclick="applyPreset(4)"></button>
+          <button type="button" class="preset p5" onclick="applyPreset(5)"></button>
+          <button type="button" class="preset p6" onclick="applyPreset(6)"></button>
+        </div>
+      </div>
+
+      <button type="button" class="danger" onclick="resetBg()">🔄 背景をリセット</button>
     </div>
   </div>
 
@@ -134,19 +315,19 @@
       const sc = d.server?.cooldown_seconds ?? "?";
 
       if(status !== "active"){
-        info.textContent = `家族：${fam}\n状態：停止中\nこの家族は現在使えません。`;
+        // 停止中でも背景設定だけは使えるように、UI自体は残す
+        info.textContent = `家族：${fam}\nこのURLは使えません：This customer is stopped`;
         btn.disabled = true;
-        return;
-      }
+      }else{
+        info.textContent = `家族：${fam}\n最終送信：${last}\nサーバ連打防止：${sc}秒`;
 
-      info.textContent = `家族：${fam}\n最終送信：${last}\nサーバ連打防止：${sc}秒`;
-
-      // ローカル連打防止（最後に押してすぐなら止める）
-      const lastLocal = getLastLocalSent();
-      if(lastLocal){
-        const diff = (Date.now() - lastLocal.getTime()) / 1000;
-        if(diff < FRONT_COOLDOWN){
-          setButtonCooldown(Math.ceil(FRONT_COOLDOWN - diff));
+        // ローカル連打防止（最後に押してすぐなら止める）
+        const lastLocal = getLastLocalSent();
+        if(lastLocal){
+          const diff = (Date.now() - lastLocal.getTime()) / 1000;
+          if(diff < FRONT_COOLDOWN){
+            setButtonCooldown(Math.ceil(FRONT_COOLDOWN - diff));
+          }
         }
       }
     }catch(e){
@@ -211,7 +392,7 @@
         if(r.status === 429 && d.cooldown_seconds){
           setButtonCooldown( Math.min(d.cooldown_seconds, 60) );
         }else{
-          btn.disabled = false;
+          btn.disabled = true; // エラー時は安全側で無効化
           btn.textContent = "📱 家族に知らせる";
         }
       }
@@ -221,6 +402,80 @@
       btn.textContent = "📱 家族に知らせる";
     }
   }
+
+  // ===== 背景設定（停止中でも使える） =====
+  const BG_KEY = "mimamori_bg_v1";
+
+  function openBgModal() {
+    document.getElementById("bgModal").style.display = "block";
+  }
+  function closeBgModal() {
+    document.getElementById("bgModal").style.display = "none";
+  }
+
+  function applyBg(styleObj) {
+    if (styleObj.mode === "image") {
+      document.body.style.background = "none";
+      document.body.style.backgroundImage = `url('${styleObj.value}')`;
+      document.body.classList.add("custom-bg");
+    } else {
+      document.body.style.backgroundImage = "none";
+      document.body.style.background = styleObj.value;
+      document.body.classList.remove("custom-bg");
+    }
+    localStorage.setItem(BG_KEY, JSON.stringify(styleObj));
+  }
+
+  function applyPreset(n) {
+    const presets = {
+      1: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      2: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+      3: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+      4: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+      5: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+      6: "linear-gradient(135deg, #30cfd0 0%, #330867 100%)"
+    };
+    applyBg({ mode: "gradient", value: presets[n] });
+    closeBgModal();
+  }
+
+  function applyBgUrl() {
+    const url = (document.getElementById("bgUrl").value || "").trim();
+    if (!url) return;
+    applyBg({ mode: "image", value: url });
+    closeBgModal();
+  }
+
+  function resetBg() {
+    localStorage.removeItem(BG_KEY);
+    document.body.style.backgroundImage = "none";
+    document.body.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+    document.body.classList.remove("custom-bg");
+    closeBgModal();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // 保存済み背景を復元
+    const saved = localStorage.getItem(BG_KEY);
+    if (saved) {
+      try { applyBg(JSON.parse(saved)); } catch(e) {}
+    }
+
+    // ファイルアップロード
+    const file = document.getElementById("bgFile");
+    if (file) {
+      file.addEventListener("change", (ev) => {
+        const f = ev.target.files?.[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          applyBg({ mode: "image", value: e.target.result });
+          closeBgModal();
+        };
+        reader.readAsDataURL(f);
+      });
+    }
+  });
 
   refreshInfo();
 </script>
