@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>みまもり 管理画面</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { font-family: sans-serif; background:#f5f6fa; padding:30px; }
+.box { background:white; padding:20px; border-radius:10px; max-width:500px; margin:auto; }
+input, button { width:100%; padding:12px; margin:10px 0; font-size:16px; }
+button { background:#667eea; color:white; border:none; border-radius:5px; cursor:pointer; }
+pre { background:#eee; padding:10px; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+<div class="box">
+<h2>みまもり 管理者画面</h2>
+
+<label>家族名</label>
+<input id="family" placeholder="例：D家">
+
+<label>ADMIN KEY</label>
+<input id="adminKey" type="password" placeholder="Cloudflareで設定したADMIN_KEY">
+
+<button onclick="create()">家族を追加してURL発行</button>
+
+<pre id="result"></pre>
+</div>
+
+<script>
+const WORKER = "https://yellow-bird-8e16.kamuibibi4144.workers.dev";
+
+async function create(){
+  const family = document.getElementById("family").value;
+  const key = document.getElementById("adminKey").value;
+
+  const res = await fetch(WORKER + "/admin/create-customer", {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "X-Admin-Key": key
+    },
+    body: JSON.stringify({ family_name: family })
+  });
+
+  const data = await res.json();
+  document.getElementById("result").textContent =
+    JSON.stringify(data, null, 2);
+}
+</script>
+</body>
+</html>
