@@ -168,7 +168,7 @@
 </head>
 <body>
   <div class="box">
-    <!-- 停止中でも背景変更はできるようにする -->
+    <!-- 停止中でも背景変更はできる -->
     <button class="settings-btn" type="button" onclick="openBgModal()">⚙️</button>
 
     <h1>🏠 みまもりアプリ</h1>
@@ -190,7 +190,8 @@
 
     <div class="note">
       連打防止：送信後しばらく押せません。<br/>
-      送信できたら短く振動します（端末によって振動しない場合があります）。
+      送信できたら短く振動します（端末によって振動しない場合があります）。<br/>
+      背景は「家族ごと（URLのkeyごと）」に保存されます（同じ端末内）。
     </div>
   </div>
 
@@ -233,6 +234,7 @@
 
   const qs = new URLSearchParams(location.search);
   const customerKey = qs.get("key") || "";
+
   const senderInput = document.getElementById("sender");
   const btn = document.getElementById("btn");
   const msg = document.getElementById("msg");
@@ -315,19 +317,21 @@
       const sc = d.server?.cooldown_seconds ?? "?";
 
       if(status !== "active"){
-        // 停止中でも背景設定だけは使えるように、UI自体は残す
+        // 停止中：通知は不可。ただし背景設定は可能。
         info.textContent = `家族：${fam}\nこのURLは使えません：This customer is stopped`;
         btn.disabled = true;
-      }else{
-        info.textContent = `家族：${fam}\n最終送信：${last}\nサーバ連打防止：${sc}秒`;
+        btn.textContent = "📱 家族に知らせる";
+        return;
+      }
 
-        // ローカル連打防止（最後に押してすぐなら止める）
-        const lastLocal = getLastLocalSent();
-        if(lastLocal){
-          const diff = (Date.now() - lastLocal.getTime()) / 1000;
-          if(diff < FRONT_COOLDOWN){
-            setButtonCooldown(Math.ceil(FRONT_COOLDOWN - diff));
-          }
+      info.textContent = `家族：${fam}\n最終送信：${last}\nサーバ連打防止：${sc}秒`;
+
+      // ローカル連打防止（最後に押してすぐなら止める）
+      const lastLocal = getLastLocalSent();
+      if(lastLocal){
+        const diff = (Date.now() - lastLocal.getTime()) / 1000;
+        if(diff < FRONT_COOLDOWN){
+          setButtonCooldown(Math.ceil(FRONT_COOLDOWN - diff));
         }
       }
     }catch(e){
@@ -392,7 +396,7 @@
         if(r.status === 429 && d.cooldown_seconds){
           setButtonCooldown( Math.min(d.cooldown_seconds, 60) );
         }else{
-          btn.disabled = true; // エラー時は安全側で無効化
+          btn.disabled = false;
           btn.textContent = "📱 家族に知らせる";
         }
       }
@@ -403,8 +407,11 @@
     }
   }
 
-  // ===== 背景設定（停止中でも使える） =====
-  const BG_KEY = "mimamori_bg_v1";
+  // ===== 背景設定：家族ごと（keyごと）に保存 =====
+  function getBgStorageKey() {
+    if (!customerKey) return "mimamori_bg_v1:global";
+    return `mimamori_bg_v1:${customerKey}`;
+  }
 
   function openBgModal() {
     document.getElementById("bgModal").style.display = "block";
@@ -423,7 +430,7 @@
       document.body.style.background = styleObj.value;
       document.body.classList.remove("custom-bg");
     }
-    localStorage.setItem(BG_KEY, JSON.stringify(styleObj));
+    localStorage.setItem(getBgStorageKey(), JSON.stringify(styleObj));
   }
 
   function applyPreset(n) {
@@ -447,7 +454,7 @@
   }
 
   function resetBg() {
-    localStorage.removeItem(BG_KEY);
+    localStorage.removeItem(getBgStorageKey());
     document.body.style.backgroundImage = "none";
     document.body.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
     document.body.classList.remove("custom-bg");
@@ -455,8 +462,8 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    // 保存済み背景を復元
-    const saved = localStorage.getItem(BG_KEY);
+    // 背景を復元（家族ごと）
+    const saved = localStorage.getItem(getBgStorageKey());
     if (saved) {
       try { applyBg(JSON.parse(saved)); } catch(e) {}
     }
