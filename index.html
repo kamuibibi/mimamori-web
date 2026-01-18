@@ -75,6 +75,13 @@
     .note{font-size:12px; color:#666; margin-top:10px; line-height:1.6;}
     .hr{height:1px; background:#eee; margin:14px 0;}
 
+    /* オート送信用（カウント大きく） */
+    .countdown{
+      font-size:34px;
+      font-weight:800;
+      margin-top:8px;
+    }
+
     /* ===== 背景設定モーダル ===== */
     .modal{
       display:none;
@@ -182,6 +189,14 @@
       <button class="smallBtn" onclick="saveSender()">保存</button>
     </div>
 
+    <!-- 自動送信中だけ出すキャンセルボタン -->
+    <div class="row" style="margin-top:12px;">
+      <button id="cancelAutoBtn" class="smallBtn" type="button"
+              style="background:#ff3b30; color:#fff; display:none;">
+        キャンセル
+      </button>
+    </div>
+
     <button id="btn" onclick="send()">📱 家族に知らせる</button>
 
     <div id="msg"></div>
@@ -191,7 +206,8 @@
     <div class="note">
       連打防止：送信後しばらく押せません。<br/>
       送信できたら短く振動します（端末によって振動しない場合があります）。<br/>
-      背景は「家族ごと（URLのkeyごと）」に保存されます（同じ端末内）。
+      背景は「家族ごと（URLのkeyごと）」に保存されます（同じ端末内）。<br/>
+      このページは「開いたら10秒カウント→自動送信（キャンセル可）」にも対応しています。
     </div>
   </div>
 
@@ -243,9 +259,25 @@
   // フロント側の連打防止（秒）
   const FRONT_COOLDOWN = 30;
 
+  // ===== 自動送信（ページ表示→カウント→送信） =====
+  const AUTO_SEND_ENABLED = true; // false にすると自動送信OFF
+  const AUTO_SEND_WAIT = 10;      // 10秒待つ
+  let autoTimer = null;
+  let autoCanceled = false;
+  let autoStarted = false;
+
+  const cancelAutoBtn = document.getElementById("cancelAutoBtn");
+
   function show(text, ok=true){
     msg.className = ok ? "ok" : "ng";
     msg.textContent = text;
+  }
+
+  function showAutoCountdown(left){
+    msg.className = "ok";
+    msg.innerHTML =
+      `このまま待つと通知します。\n間違いならキャンセルしてください。\n` +
+      `<div class="countdown">${left}</div>`;
   }
 
   function vibrateOK(){
@@ -339,10 +371,76 @@
     }
   }
 
-  async function send(){
+  function stopAutoCountdown(messageText){
+    autoCanceled = true;
+    if(autoTimer){
+      clearInterval(autoTimer);
+      autoTimer = null;
+    }
+    cancelAutoBtn.style.display = "none";
+    if(messageText) show(messageText, true);
+  }
+
+  function startAutoSendCountdown(){
+    if(!AUTO_SEND_ENABLED) return;
+    if(!customerKey) return;
+    if(autoStarted) return; // 二重起動防止
+    autoStarted = true;
+
+    // すでにローカル連打防止中なら開始しない
+    const lastLocal = getLastLocalSent();
+    if(lastLocal){
+      const diff = (Date.now() - lastLocal.getTime()) / 1000;
+      if(diff < FRONT_COOLDOWN) return;
+    }
+
+    // ボタンがすでに無効（停止中/無効URLなど）の場合も開始しない
+    if(btn.disabled) return;
+
+    autoCanceled = false;
+    cancelAutoBtn.style.display = "block";
+    cancelAutoBtn.disabled = false;
+
+    let left = AUTO_SEND_WAIT;
+    showAutoCountdown(left);
+
+    autoTimer = setInterval(async () => {
+      left--;
+      if(left <= 0){
+        clearInterval(autoTimer);
+        autoTimer = null;
+        cancelAutoBtn.style.display = "none";
+
+        if(autoCanceled){
+          show("キャンセルしました。通知は送っていません。", true);
+          return;
+        }
+
+        // 自動送信（既存のsend()をそのまま使う）
+        await send(true);
+        return;
+      }
+      showAutoCountdown(left);
+    }, 1000);
+  }
+
+  cancelAutoBtn.addEventListener("click", () => {
+    stopAutoCountdown("キャンセルしました。通知は送っていません。");
+  });
+
+  async function send(fromAuto=false){
     if(!customerKey){
       show("URLの key がありません。", false);
       return;
+    }
+
+    // 二重送信防止（送信中にまた呼ばれたら無視）
+    if (btn.textContent === "送信中...") return;
+
+    // オート送信待機中に手動で押した場合：
+    // 「今すぐ送る」にしたいので、カウントダウンを止めて送信する
+    if(!fromAuto && autoTimer){
+      stopAutoCountdown(); // 表示は送信中に差し替えるので空でOK
     }
 
     // フロント側連打防止
@@ -482,9 +580,13 @@
         reader.readAsDataURL(f);
       });
     }
-  });
 
-  refreshInfo();
+    // 情報取得
+    refreshInfo();
+
+    // ページ表示 → 自動送信のカウント開始（少し遅らせる）
+    setTimeout(startAutoSendCountdown, 700);
+  });
 </script>
 </body>
 </html>
